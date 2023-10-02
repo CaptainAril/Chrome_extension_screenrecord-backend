@@ -22,23 +22,22 @@ class VideoGetUpload(APIView):
             return Video.objects.get(pk=pk)
         except Video.DoesNotExist:
             raise Http404
-
+    
     def get(self, request, id):
         video = self.get_object(id)
-        # print(video.file)
-        # print(video.file.file)
-        # serializer = GetVideoSerializer(video)
-        # data = {
-        #     "id":video.id,
-        #     "name":video.name,
-        #     "video":video.file.file,
-        #     "transcription":video.transcription,
-        #     "created_at":video.created_at
-        # }
-        video_file = video.file.file
-        response = FileResponse(video_file, content_type='video/mp4')
-        response['Content-Disposition'] = f'attachment; filename="{video_file.name}"'
-        return response
+        print(video.file)
+        print(video.file.file)
+        serializer = GetVideoSerializer(video)
+        domain = request.build_absolute_uri('/')
+        play_url = domain + 'api/video/play/' + str(video.id)
+        data = {
+            "id":video.id,
+            "name":video.name,
+            "video":play_url,
+            "transcription":video.transcription,
+            "created_at":video.created_at
+        }
+        return Response(data=data)
     
     def post(self, request):
         serializer = VideoSerializer(data=request.data)
@@ -97,3 +96,22 @@ class VideoGetUpload(APIView):
 class GetVideos(generics.ListAPIView):
     queryset = Video.objects.all()
     serializer_class = GetAllVideosSerializer
+
+
+class PlayVideo(APIView):
+
+    def get_object(self, pk):
+        try:
+            return Video.objects.get(pk=pk)
+        except Video.DoesNotExist:
+            raise Http404
+
+    def get(self, request, id):
+        video = self.get_object(id)
+        
+        video_file = video.file.file
+        response = FileResponse(video_file, content_type='video/mp4')
+        response['Content-Disposition'] = f'attachment; filename="{video_file.name}"'
+
+        return response
+    
